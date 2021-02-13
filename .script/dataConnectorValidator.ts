@@ -1,15 +1,19 @@
 import fs from "fs";
 import { runCheckOverChangedFiles } from "./utils/changedFilesValidator";
+import { ConnectorCategory } from "./utils/dataConnector";
+import { isValidRequirementBanner } from "./utils/dataConnectorCheckers/additionalBannerRequirementCheckers";
+import { isValidDataType } from "./utils/dataConnectorCheckers/dataTypeChecker";
+import { isValidFileName } from "./utils/dataConnectorCheckers/fileNameChecker";
+import { isValidId } from "./utils/dataConnectorCheckers/idChecker";
+import { isValidPermissions } from "./utils/dataConnectorCheckers/permissionsChecker";
 import { ExitCode } from "./utils/exitCode";
 import { isValidSchema } from "./utils/jsonSchemaChecker";
-import { isValidId } from "./utils/dataConnectorCheckers/idChecker";
-import { isValidDataType } from "./utils/dataConnectorCheckers/dataTypeChecker";
-import { isValidPermissions } from "./utils/dataConnectorCheckers/permissionsChecker";
 import * as logger from "./utils/logger";
-import { ConnectorCategory } from "./utils/dataConnector";
 
 export async function IsValidDataConnectorSchema(filePath: string): Promise<ExitCode> {
   let jsonFile = JSON.parse(fs.readFileSync(filePath, "utf8"));
+  var filename = filePath.replace(/^.*[\\\/]/, '')
+  console.log(filename);
   if(isPotentialConnectorJson(jsonFile))
   {
     let connectorCategory = getConnectorCategory(jsonFile.dataTypes, jsonFile.instructionSteps);
@@ -17,9 +21,12 @@ export async function IsValidDataConnectorSchema(filePath: string): Promise<Exit
     isValidSchema(jsonFile, schema);
     isValidId(jsonFile.id);
     isValidDataType(jsonFile.dataTypes);
-
-     /* Disabling temporarily till we get confirmation from PM*/
-    // isValidFileName(filePath
+     isValidFileName(filePath)
+    console.log(jsonFile.additionalRequirementBanner)
+    if(jsonFile.additionalRequirementBanner!="" && jsonFile.additionalRequirementBanner!= undefined)
+    {
+    isValidRequirementBanner(jsonFile.additionalRequirementBanner)
+    }
     isValidPermissions(jsonFile.permissions, connectorCategory);
   }
   else{
